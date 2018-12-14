@@ -1,5 +1,5 @@
 # Principal Components Variable Importance Reconstruction (PC-VIR)
-Data and R code for for Principal Components Variable Importance Reconstruction (PC-VIR) method (Carignan & Egurtzegi)
+Data and R code for Principal Components Variable Importance Reconstruction (PC-VIR) method (Carignan & Egurtzegi)
 
 
 This repository provides the data and R functions necessary to replicate the results from Carignan & Egurtzegi (in preparation).
