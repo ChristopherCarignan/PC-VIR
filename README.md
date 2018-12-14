@@ -1,4 +1,4 @@
-# RIA-network-analysis
+# PC-VIR
 Data and R code for for Principal Components Variable Importance Reconstruction (PC-VIR) method (Carignan & Ergutzegi)
 
 
