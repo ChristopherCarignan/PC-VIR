@@ -38,3 +38,7 @@ PC.VIR.coeffs <- PC.VIR(PC.data, train.data, logit.mods, features)
 # Plot the important variables
 p <- plot.imp.vars(PC.VIR.coeffs,features)
 p 
+
+
+## Test and validate results using the following function: 
+## test_PC-VIR_results.R
