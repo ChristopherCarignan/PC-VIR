@@ -126,13 +126,13 @@ for (speaker in unique(train.dat$speaker)){
   PC.speaker  <- pca$x[all.dat$rownum[all.dat$speaker==speaker] %in% test.dat$rownum[test.dat$speaker==speaker],]
   
   # Predict nasality probabilities and add them to the test data matrix
-  test.dat$PLS.pred[test.dat$speaker==speaker] <- predict(bin.mod, type="response", newdata=as.data.frame(PC.speaker))
+  test.dat$PLSDA.pred[test.dat$speaker==speaker] <- predict(bin.mod, type="response", newdata=as.data.frame(PC.speaker))
 }
 # Find the difference (i.e., error) between the predicted values and a perfect response (0,1)
-test.dat$PLS.diff <- test.dat$PLS.pred - test.dat$nasality2
+test.dat$PLSDA.diff <- test.dat$PLSDA.pred - test.dat$nasality2
 
 
 # Compare the absolute error between the two methods
-t.test(abs(test.dat$PCVIR.diff),abs(test.dat$PLS.diff))
+t.test(abs(test.dat$PCVIR.diff),abs(test.dat$PLSDA.diff))
 
 # The PC-VIR method provides significantly more accurate predictions on new data, compared to the PLS-DA method
