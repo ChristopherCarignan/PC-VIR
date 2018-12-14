@@ -1,6 +1,5 @@
 ### Principal Components Variable Importance Reconstruction (PC-VIR)
 
-#library(multcomp)
 library(ggplot2)
 
 load('acoustic_data.Rda')
