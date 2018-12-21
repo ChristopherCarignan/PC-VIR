@@ -13,4 +13,4 @@ Import the following functions into R: feature.PCA (from acoustic_PCA.R), logist
 
 Use the code provided in PC-VIR_analysis.R to perform PCA-based variable importance reconstruction, and to plot the results.
 
-Use the code provided in test_PC-VIR_results.R to compare prediction accuracy against a Partial Least Squares Discriminant Analysis (PLS-DA) model.
+Use the code provided in test_PC-VIR_results.R to validate models and compare prediction accuracy against a Partial Least Squares Discriminant Analysis (PLS-DA) model.
