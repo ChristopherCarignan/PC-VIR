@@ -1,6 +1,6 @@
 # Reconstruct the important variables from the PCA-based regression models
 
-PC.VIR <- function(PCdata, traindata, mylogit, features){
+PC_VIR <- function(PCdata, traindata, mylogit, features){
   coeffs <- c()
   speakers <- unique(traindata$speaker)
   

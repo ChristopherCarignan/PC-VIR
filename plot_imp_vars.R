@@ -1,6 +1,6 @@
 # Create a plot of the variables determined to be at least moderately important to the binary distinction
 
-plot.imp.vars <- function(coeffs,features){
+plot_imp_vars <- function(coeffs,features){
   # Create blank plotting array
   plot.dat <- c()
   speakers <- names(PC.VIR.coeffs)

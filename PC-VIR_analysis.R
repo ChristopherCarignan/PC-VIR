@@ -14,7 +14,7 @@ features  <- c('a1.amp','a2.amp','a3.amp',       # Formant harmonic amplitudes
                'h1h2','cog','a3p0')              # Spectral features
 
 # Run the function to perform speaker-wise PCA on the acoustic features
-PC.data <- feature.PCA(ac.data, features)
+PC.data <- feature_PCA(ac.data, features)
 
 # Lists of phones for the nasal-oral binary training
 nasals  <- c('n','m','N','n_d','J')
@@ -33,10 +33,10 @@ logit.mods  <- bin.results[[3]] # Speaker-specific binary models
 # Run the function to reconstruct the important variables from the PCA-based regression models
 # Coefficients with absolute value >= 0.98 can be considered as moderately important
 # Coefficients with absolute value >= 1.372 can be consideres as strongly important
-PC.VIR.coeffs <- PC.VIR(PC.data, train.data, logit.mods, features)
+PC.VIR.coeffs <- PC_VIR(PC.data, train.data, logit.mods, features)
 
 # Plot the important variables
-p <- plot.imp.vars(PC.VIR.coeffs,features)
+p <- plot_imp_vars(PC.VIR.coeffs,features)
 p 
 
 

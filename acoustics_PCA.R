@@ -1,5 +1,5 @@
 ### PCA of acoustic features
-feature.PCA <- function(my.data,features){
+feature_PCA <- function(my.data,features){
   PCdata <- c()
   
   # Separate PCA models are performed for each speaker
