@@ -2,6 +2,7 @@
 
 library(plsRglm)
 library(dplyr)
+library(ResourceSelection)
 
 set.seed(123) # Select random seed for replicability 
 
@@ -9,6 +10,8 @@ all.dat <- train.data # Binary training data from oral-nasal_training.R
 
 all.dat$ID <- as.numeric(as.factor(paste0(all.dat$tokennum,all.dat$phonenum,all.dat$speaker))) # Unique ID by token
 all.dat$nasality2  <- as.numeric(all.dat$nasality=='nasal') # Nasality as a non-factor number: 0, 1
+
+HL.tests <- c() # Will be used to store the results of the Hosmer-Lemeshow test for model validation
 
 # Training data for validation: 80%
 # Testing data for validatin: 20%
@@ -41,6 +44,7 @@ for (speaker in unique(train.dat$speaker)){
 
 
 # Perform the PC-VIR analysis and predict nasal/oral probabilities for testing data set
+HL.tests$PCVIR <- c()
 for (speaker in unique(train.dat$speaker)){
   speakerdat  <- train.dat[train.dat$speaker==speaker,] # Get the training data for the speaker
   PCs         <- PC.data[[speaker]]$scores # Get the PC scores for the speaker
@@ -80,6 +84,10 @@ for (speaker in unique(train.dat$speaker)){
   # New PCA-based logistic regression on only the selected variables
   bin.mod <- glm(nasality ~ ., data = pca.dat, family = "binomial")
   
+  # Perform Hosmer-Lemeshow test for goodness of fit (model validation)
+  HL.test <- hoslem.test(bin.mod$y, fitted(bin.mod))
+  HL.tests$PCVIR <- rbind(HL.tests$PCVIR, HL.test$statistic)
+  
   # Get the speaker data from the 20% test data set
   speakerdat  <- all.dat[all.dat$rownum %in% test.dat$rownum[test.dat$speaker==speaker],]
   # Get the PC scores corresponding with the test data set
@@ -95,6 +103,7 @@ test.dat$PCVIR.diff <- test.dat$PCVIR.pred - test.dat$nasality2
 ## Model comparison/validation
 # The results will now be compared against the same training and testing data sets, 
 # using partial least squares discriminant analysis (PLS-DA) to train and predict values
+HL.tests$PLSDA <- c()
 for (speaker in unique(train.dat$speaker)){
   speak.dat <- train.dat[train.dat$speaker==speaker,] # Get the training data for the speaker
   
@@ -120,6 +129,10 @@ for (speaker in unique(train.dat$speaker)){
   # New PCA-based logistic regression on only the selected variables
   bin.mod <- glm(nasality ~ ., data = pca.dat, family = "binomial")
   
+  # Perform Hosmer-Lemeshow test for goodness of fit (model validation)
+  HL.test <- hoslem.test(bin.mod$y, fitted(bin.mod))
+  HL.tests$PLSDA <- rbind(HL.tests$PLSDA, HL.test$statistic)
+  
   # Get the speaker data from the 20% test data set
   speakerdat  <- all.dat[all.dat$rownum %in% test.dat$rownum[test.dat$speaker==speaker],]
   # Get the PC scores corresponding with the test data set
@@ -132,7 +145,24 @@ for (speaker in unique(train.dat$speaker)){
 test.dat$PLSDA.diff <- test.dat$PLSDA.pred - test.dat$nasality2
 
 
+## Model validation (goodness of fit)
+# Here, we get the average Chi-squared values of the Hosmer-Lemeshow tests for each model.
+# Then, we calculate p-values from the average Chi-squared value and the number of degrees of freedom.
+# For the Hosmer-Lemeshow test, the null hypothesis holds that the model fits the data, 
+# i.e., a p-value less than 0.05 indicates that the logistic regression model fits the data well
+dof <- HL.test$parameter
+
+# First, the model based on the PC-VIR method:
+pchisq(mean(HL.tests$PCVIR), df=dof)
+
+# Second, the model based on the PLS-DA method:
+pchisq(mean(HL.tests$PLSDA), df=dof)
+
+# Conclusion: both methods result in models that fit the data well
+
+
+## Model validation (accuracy of prediction)
 # Compare the absolute error between the two methods
 t.test(abs(test.dat$PCVIR.diff),abs(test.dat$PLSDA.diff))
 
-# The PC-VIR method provides significantly more accurate predictions on new data, compared to the PLS-DA method
+# Conclusion: the PC-VIR method provides significantly more accurate predictions on new data, compared to the PLS-DA method
