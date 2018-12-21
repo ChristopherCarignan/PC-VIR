@@ -149,7 +149,7 @@ test.dat$PLSDA.diff <- test.dat$PLSDA.pred - test.dat$nasality2
 # Here, we get the average Chi-squared values of the Hosmer-Lemeshow tests for each model.
 # Then, we calculate p-values from the average Chi-squared value and the number of degrees of freedom.
 # For the Hosmer-Lemeshow test, the null hypothesis holds that the model fits the data, 
-# i.e., a p-value less than 0.05 indicates that the logistic regression model fits the data well
+# i.e., a p-value *greater than* 0.05 indicates that the logistic regression model fits the data well
 dof <- HL.test$parameter
 
 # First, the model based on the PC-VIR method:
