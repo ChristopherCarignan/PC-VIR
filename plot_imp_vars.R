@@ -49,7 +49,7 @@ plot_imp_vars <- function(coeffs,features){
   # 1.96 = level of z-statistic significance
   # 0.7 = strong linear relationship of PC scores
   
-  strong <- min(which(order < 1.372)) # Cutoff for moderate importance
+  strong <- min(which(order < 1.372)) # Cutoff for strong importance
   strong <- mean(c(strong,strong-1))
 
   
