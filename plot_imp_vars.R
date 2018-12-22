@@ -42,12 +42,16 @@ plot_imp_vars <- function(coeffs,features){
   # 1.96 = level of z-statistic significance
   # 0.5 = moderate linear relationship of PC scores
   
-  # Threshold for moderate importance = 1.372 (1.96 * 0.7)
+  moderate <- min(which(order < 0.98)) # Cutoff for moderate importance
+  moderate <- mean(c(moderate,moderate-1))
+  
+  # Threshold for strong importance = 1.372 (1.96 * 0.7)
   # 1.96 = level of z-statistic significance
   # 0.7 = strong linear relationship of PC scores
   
-  cutoff <- min(which(order < 0.98)) # Cutoff for moderate importance
-  cutoff <- mean(c(cutoff,cutoff-1))
+  strong <- min(which(order < 1.372)) # Cutoff for moderate importance
+  strong <- mean(c(strong,strong-1))
+
   
   # Create the plot
   p <- ggplot(plot.dat, aes(x=vars, y=dat, group=vars)) + 
@@ -60,10 +64,14 @@ plot_imp_vars <- function(coeffs,features){
     geom_hline(yintercept=-1.372, linetype=2, lwd=0.7) + 
     # This geom has to be added twice for some reason: once before and once after the colored fields
     geom_boxplot(notch=F,fill='white') + stat_summary(fun.y=mean, geom="point", size=4, pch=21, fill='lightgray') +
-    # Distinguish variables of importance
-    geom_vline(xintercept=cutoff, linetype=1, col='gray') +
-    geom_rect(data=NULL,aes(xmin=0,xmax=cutoff,ymin=-Inf,ymax=Inf),fill="green",alpha=0.002) + 
-    geom_rect(data=NULL,aes(xmin=cutoff,xmax=length(features)+1,ymin=-Inf,ymax=Inf),fill="red",alpha=0.002) + 
+    # Distinguish variables of no importance
+    geom_rect(data=NULL,aes(xmin=moderate,xmax=length(features)+1,ymin=-Inf,ymax=Inf),fill="red",alpha=0.002) + 
+    # Distinguish variables of moderate importance
+    geom_vline(xintercept=moderate, linetype=1, col='gray') +
+    geom_rect(data=NULL,aes(xmin=strong,xmax=moderate,ymin=-Inf,ymax=Inf),fill="yellow",alpha=0.002) + 
+    # Distinguish variables of strong importance
+    geom_vline(xintercept=strong, linetype=1, col='gray') +
+    geom_rect(data=NULL,aes(xmin=0,xmax=strong,ymin=-Inf,ymax=Inf),fill="green",alpha=0.002) + 
     # Add the boxplot geom again
     geom_boxplot(notch=F,fill='white') + stat_summary(fun.y=mean, geom="point", size=4, pch=21, fill='lightgray') + 
     scale_x_discrete(name='', labels=labels) + theme_classic() + 
