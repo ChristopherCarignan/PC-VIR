@@ -74,6 +74,10 @@ plot_imp_vars <- function(coeffs,features){
     geom_rect(data=NULL,aes(xmin=0,xmax=strong,ymin=-Inf,ymax=Inf),fill="green",alpha=0.002) + 
     # Add the boxplot geom again
     geom_boxplot(notch=F,fill='white') + stat_summary(fun.y=mean, geom="point", size=4, pch=21, fill='lightgray') + 
+    # Set text for levels of importance
+    annotate(geom="text", x=mean(c(0,strong)), y=max(plot.dat$dat), label="strong") +
+    annotate(geom="text", x=mean(c(strong,moderate)), y=max(plot.dat$dat), label="moderate") +
+    annotate(geom="text", x=mean(c(moderate,length(features)+1)), y=max(plot.dat$dat), label="no import.") +
     scale_x_discrete(name='', labels=labels) + theme_classic() + 
     theme(axis.text.x=element_text(size=12, angle=45, vjust=0.75),axis.title=element_text(size=16),axis.text=element_text(size=12)) + 
     ylab('Coefficient of contribution to nasality') + xlab('')
