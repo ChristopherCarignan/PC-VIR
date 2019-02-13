@@ -13,8 +13,8 @@ feature_PCA <- function(my.data,features){
     vars      <- apply(pca$x, 2, var)
     props     <- vars / sum(vars)
     var.exp   <- cumsum(props)
-    to.keep   <- var.exp[1:min(which(var.exp >= 0.8))] # Keep as many PCs as explain at least 80% of variance
-    
+    to.keep <- which(vars > 1) # Keep PCs with eigenvalues > 1 (i.e., Kaiser criterion)
+      
     # Save the PC scores and original PCA models
     PCdata[[speaker]]$scores  <- pca$x[,1:length(to.keep)]
     PCdata[[speaker]]$model   <- pca
