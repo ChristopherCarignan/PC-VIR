@@ -39,6 +39,8 @@ plot_imp_vars <- function(coeffs,features,adj.n=NULL){
   
   # NB: the following code includes automatic thresholding of moderate and strong importance of the variables
   
+  # Optional alpha adjustment of z-statistic for number of PCs retained
+  # Maximally conservative method similar to Bonferroni adjustment for p-values
   if (!is.null(adj.n)){
     z.thresh <- qnorm(.025/adj.n, lower.tail=F) # alpha adjustment
   }else{
