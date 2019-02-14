@@ -1,6 +1,6 @@
 # Create a plot of the variables determined to be at least moderately important to the binary distinction
 
-plot_imp_vars <- function(coeffs,features){
+plot_imp_vars <- function(coeffs,features,adj.n=NULL){
   # Create blank plotting array
   plot.dat <- c()
   speakers <- names(PC.VIR.coeffs)
@@ -36,32 +36,35 @@ plot_imp_vars <- function(coeffs,features){
   
   plot.dat$vars <- factor(plot.dat$vars, levels=names(order))
   
+  
   # NB: the following code includes automatic thresholding of moderate and strong importance of the variables
   
-  # Threshold for moderate importance = 0.98 (1.96 * 0.5)
-  # 1.96 = level of z-statistic significance
-  # 0.5 = moderate linear relationship of PC scores
+  if (!is.null(adj.n)){
+    z.thresh <- qnorm(.025/adj.n, lower.tail=F) # alpha adjustment
+  }else{
+    z.thresh <- 1.96 # no alpha adjustment
+  }
   
-  moderate <- min(which(order < 0.98)) # Cutoff for moderate importance
-  moderate <- mean(c(moderate,moderate-1))
+  # Threshold for moderate importance = z-score * 0.5 (i.e., moderate linear relationship of PC scores)
+  mod.thresh  <- z.thresh*0.5
+  moderate    <- min(which(order < mod.thresh)) # Cutoff for moderate importance
+  moderate    <- mean(c(moderate,moderate-1))
   
-  # Threshold for strong importance = 1.372 (1.96 * 0.7)
-  # 1.96 = level of z-statistic significance
-  # 0.7 = strong linear relationship of PC scores
-  
-  strong <- min(which(order < 1.372)) # Cutoff for strong importance
-  strong <- mean(c(strong,strong-1))
+  # Threshold for strong importance = z-score * 0.7 (i.e., strong linear relationship of PC scores)
+  str.thresh  <- z.thresh*0.7
+  strong      <- min(which(order < str.thresh)) # Cutoff for strong importance
+  strong      <- mean(c(strong,strong-1))
 
   
   # Create the plot
   p <- ggplot(plot.dat, aes(x=vars, y=dat, group=vars)) + 
     geom_hline(yintercept=0) + 
     # Lines for levels of moderate importance
-    geom_hline(yintercept=0.98, linetype=3, lwd=0.7) + 
-    geom_hline(yintercept=-0.98, linetype=3, lwd=0.7) + 
+    geom_hline(yintercept=mod.thresh, linetype=3, lwd=0.7) + 
+    geom_hline(yintercept=-mod.thresh, linetype=3, lwd=0.7) + 
     # Lines for levels of strong importance
-    geom_hline(yintercept=1.372, linetype=2, lwd=0.7) + 
-    geom_hline(yintercept=-1.372, linetype=2, lwd=0.7) + 
+    geom_hline(yintercept=str.thresh, linetype=2, lwd=0.7) + 
+    geom_hline(yintercept=-str.thresh, linetype=2, lwd=0.7) + 
     # This geom has to be added twice for some reason: once before and once after the colored fields
     geom_boxplot(notch=F,fill='white') + stat_summary(fun.y=mean, geom="point", size=4, pch=21, fill='lightgray') +
     # Distinguish variables of no importance
@@ -75,9 +78,9 @@ plot_imp_vars <- function(coeffs,features){
     # Add the boxplot geom again
     geom_boxplot(notch=F,fill='white') + stat_summary(fun.y=mean, geom="point", size=4, pch=21, fill='lightgray') + 
     # Set text for levels of importance
-    annotate(geom="text", x=mean(c(0,strong)), y=max(plot.dat$dat), label="strong") +
-    annotate(geom="text", x=mean(c(strong,moderate)), y=max(plot.dat$dat), label="moderate") +
-    annotate(geom="text", x=mean(c(moderate,length(features)+1)), y=max(plot.dat$dat), label="no import.") +
+    annotate(geom="text", x=mean(c(0,strong)), y=max(plot.dat$dat), label="strong", size=6) +
+    annotate(geom="text", x=mean(c(strong,moderate)), y=max(plot.dat$dat), label="moderate", size=6) +
+    annotate(geom="text", x=mean(c(moderate,length(features)+1)), y=max(plot.dat$dat), label="no importance", size=6) +
     scale_x_discrete(name='', labels=labels) + theme_classic() + 
     theme(axis.text.x=element_text(size=12, angle=45, vjust=0.75),axis.title=element_text(size=16),axis.text=element_text(size=12)) + 
     ylab('Coefficient of contribution to nasality') + xlab('')
