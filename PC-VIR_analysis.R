@@ -16,6 +16,12 @@ features  <- c('a1.amp','a2.amp','a3.amp',       # Formant harmonic amplitudes
 # Run the function to perform speaker-wise PCA on the acoustic features
 PC.data <- feature_PCA(ac.data, features)
 
+# Get the number of PCs retained
+pcs <- c()
+for (pc in 1: length(PC.data)){
+  pcs[pc] <- ncol(PC.data[[pc]]$scores)
+}
+
 # Lists of phones for the nasal-oral binary training
 nasals  <- c('n','m','N','n_d','J')
 orals   <- c('d','t','b','p','g','k')
@@ -36,9 +42,8 @@ logit.mods  <- bin.results[[3]] # Speaker-specific binary models
 PC.VIR.coeffs <- PC_VIR(PC.data, train.data, logit.mods, features)
 
 # Plot the important variables
-p <- plot_imp_vars(PC.VIR.coeffs,features)
-p 
-
+plot_imp_vars(PC.VIR.coeffs, features, mean(pcs)) # with alpha adjustment for average number of PCs retained
+plot_imp_vars(PC.VIR.coeffs, features) # without alpha adjustment
 
 ## Test and validate results using the following function: 
 ## test_PC-VIR_results.R
