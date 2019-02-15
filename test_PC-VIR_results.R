@@ -3,6 +3,9 @@
 library(plsRglm)
 library(dplyr)
 library(ResourceSelection)
+library(lme4)
+library(lmerTest)
+library(ggpubr)
 
 set.seed(123) # Select random seed for replicability 
 
@@ -11,6 +14,53 @@ all.dat <- train.data # Binary training data from oral-nasal_training.R
 all.dat$ID <- as.numeric(as.factor(paste0(all.dat$tokennum,all.dat$phonenum,all.dat$speaker))) # Unique ID by token
 all.dat$nasality2  <- as.numeric(all.dat$nasality=='nasal') # Nasality as a non-factor number: 0, 1
 
+
+# Compare PC-VIR results against multiple logistic mixed effects models
+glmm.dat <- all.dat
+glmm.dat$nasality <- relevel(glmm.dat$nasality, ref="oral")
+
+# normalize acoustic variables for each speaker (z-score transformation)
+for (speaker in unique(glmm.dat$speaker)){
+  for (feature in features){
+    glmm.dat[[feature]][glmm.dat$speaker==speaker] <- scale(glmm.dat[[feature]][glmm.dat$speaker==speaker], 
+                                                            center=T, scale=T)
+  }
+}
+
+glmm.results <- c()
+for (feature in 1:length(features)){
+  # formula for logistic mixed effects model
+  # random slopes/intercepts by phone, random intercepts by speaker
+  fmla <- as.formula(paste("nasality ~ ", features[feature],
+                           " + (1 + ", features[feature], "|phone) + (1|speaker)"))
+  
+  glmm <- glmer(fmla, data=glmm.dat, family='binomial') # create the model
+
+  # log the model results
+  glmm.results$var[feature]    <- features[feature]
+  glmm.results$est.[feature]   <- coef(summary(glmm))[2]
+  glmm.results$z.val[feature]  <- coef(summary(glmm))[6]
+  glmm.results$p.val[feature]  <- coef(summary(glmm))[8]
+}
+glmm.results <- as.data.frame(glmm.results)
+glmm.results[order(abs(glmm.results$p.val)),] # display the results, ordered by p-value
+
+# Compare the results for PC-VIR and the multiple logistic mixed effects models
+var.order <- glmm.results$var[order(abs(glmm.results$z.val))]
+data1     <- glmm.results$z.val[order(abs(glmm.results$z.val))]
+data2     <- rowMeans(PC.VIR.coeffs)[match(var.order, rownames(PC.VIR.coeffs))]
+comb.dat  <- as.data.frame(cbind(data1,data2))
+sp <- ggscatter(comb.dat, x = "data1", y = "data2",
+                add = "reg.line",  # Add regressin line
+                add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+                conf.int = TRUE, # Add confidence interval
+                xlab = "z-statistic from logistic mixed effects models",
+                ylab = "PC-VIR coefficient (speaker average)"
+)
+# Add correlation coefficient
+sp + stat_cor(method = "pearson", size=6) + font("xlab", size=16) + font("ylab", size=16) + font("xy.text", size=14)
+
+## Data preparation for model validation
 HL.tests <- c() # Will be used to store the results of the Hosmer-Lemeshow test for model validation
 
 # Training data for validation: 80%
@@ -69,7 +119,8 @@ for (speaker in unique(train.dat$speaker)){
   coeffs <- as.data.frame(colSums(coeffs)) # Sum the weighted coefficients for the speaker
   
   # Select the important variables to keep (at least moderate importance)
-  to.keep       <- abs(coeffs)>=0.98
+  #to.keep       <- abs(coeffs)>=0.98
+  to.keep       <- abs(coeffs)>=1.314345
   sig.coeffs    <- coeffs[to.keep]
   coeff.names   <- rownames(coeffs)[to.keep]
   
