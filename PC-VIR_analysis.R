@@ -42,8 +42,8 @@ logit.mods  <- bin.results[[3]] # Speaker-specific binary models
 PC.VIR.coeffs <- PC_VIR(PC.data, train.data, logit.mods, features)
 
 # Plot the important variables
-plot_imp_vars(PC.VIR.coeffs, features, mean(pcs)) # with alpha adjustment for average number of PCs retained
-plot_imp_vars(PC.VIR.coeffs, features) # without alpha adjustment
+# include adjustment of z-statistic for average number of PCs retained
+plot_imp_vars(PC.VIR.coeffs, features, mean(pcs))
 
 ## Test and validate results using the following function: 
 ## test_PC-VIR_results.R
