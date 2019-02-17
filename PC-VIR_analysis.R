@@ -37,13 +37,14 @@ train.data  <- bin.results[[2]] # Training data used
 logit.mods  <- bin.results[[3]] # Speaker-specific binary models
 
 # Run the function to reconstruct the important variables from the PCA-based regression models
-# Coefficients with absolute value >= 0.98 can be considered as moderately important
-# Coefficients with absolute value >= 1.372 can be consideres as strongly important
+# No adjustment of z-statistic to control for Type I error
 PC.VIR.coeffs <- PC_VIR(PC.data, train.data, logit.mods, features)
 
+# Optional adjustment for Type I error
+PC.VIR.coeffs <- PC_VIR(PC.data, train.data, logit.mods, features, adjust = T)
+
 # Plot the important variables
-# include adjustment of z-statistic for average number of PCs retained
-plot_imp_vars(PC.VIR.coeffs, features, mean(pcs))
+plot_imp_vars(PC.VIR.coeffs, features)
 
 ## Test and validate results using the following function: 
 ## test_PC-VIR_results.R
