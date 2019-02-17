@@ -60,6 +60,7 @@ sp <- ggscatter(comb.dat, x = "data1", y = "data2",
 # Add correlation coefficient
 sp + stat_cor(method = "pearson", size=6) + font("xlab", size=16) + font("ylab", size=16) + font("xy.text", size=14)
 
+
 ## Data preparation for model validation
 HL.tests <- c() # Will be used to store the results of the Hosmer-Lemeshow test for model validation
 
@@ -110,8 +111,18 @@ for (speaker in unique(train.dat$speaker)){
   
   # Do the variable importance reconstruction
   for (pc in 1:pc.num){
-    this.z.val    <- z.values[pc+1] # Get the z-statistic from the logistic model for this PC
-    these.coeffs  <- t(as.data.frame(PC.data[[speaker]]$model$rotation[,pc])) # Get the PC coefficients
+    # Get the z-statistic from the logistic model for this PC
+    this.z.val    <- z.values[pc+1]
+    
+    # Type I error adjustment for number of PCs (Bonferroni correction)
+    p.adj <- 2*pnorm(-abs(this.z.val))*pc.num
+    if (p.adj > 1){
+      p.adj <- 1
+    }
+    this.z.val <- sign(this.z.val)*qnorm(1-p.adj/2) 
+    
+    # Get the PC coefficients
+    these.coeffs  <- t(as.data.frame(PC.data[[speaker]]$model$rotation[,pc]))
     
     # Multiply the PC coefficients by the z-statistic for the PC to reconstruct the variable importance
     coeffs <- rbind(coeffs, (these.coeffs * this.z.val)) 
@@ -119,8 +130,7 @@ for (speaker in unique(train.dat$speaker)){
   coeffs <- as.data.frame(colSums(coeffs)) # Sum the weighted coefficients for the speaker
   
   # Select the important variables to keep (at least moderate importance)
-  #to.keep       <- abs(coeffs)>=0.98
-  to.keep       <- abs(coeffs)>=1.314345
+  to.keep       <- abs(coeffs)>=0.98
   sig.coeffs    <- coeffs[to.keep]
   coeff.names   <- rownames(coeffs)[to.keep]
   
@@ -214,6 +224,8 @@ pchisq(mean(HL.tests$PLSDA), df=dof)
 
 ## Model validation (accuracy of prediction)
 # Compare the absolute error between the two methods
-t.test(abs(test.dat$PCVIR.diff),abs(test.dat$PLSDA.diff))
+mean(abs(test.dat$PCVIR.diff))
+mean(abs(test.dat$PLSDA.diff))
+wilcox.test(abs(test.dat$PCVIR.diff),abs(test.dat$PLSDA.diff))
 
 # Conclusion: the PC-VIR method provides significantly more accurate predictions on new data, compared to the PLS-DA method
