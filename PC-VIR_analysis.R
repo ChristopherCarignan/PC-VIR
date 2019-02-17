@@ -37,10 +37,9 @@ train.data  <- bin.results[[2]] # Training data used
 logit.mods  <- bin.results[[3]] # Speaker-specific binary models
 
 # Run the function to reconstruct the important variables from the PCA-based regression models
-# No adjustment of z-statistic to control for Type I error
 PC.VIR.coeffs <- PC_VIR(PC.data, train.data, logit.mods, features)
 
-# Optional adjustment for Type I error
+# The function also has an optional adjustment for Type I error
 PC.VIR.coeffs <- PC_VIR(PC.data, train.data, logit.mods, features, adjust = T)
 
 # Plot the important variables
