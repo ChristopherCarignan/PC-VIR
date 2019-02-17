@@ -26,10 +26,10 @@ plot_imp_vars <- function(coeffs,features){
   # Get the average values for the variables
   means   <- tapply(plot.dat$dat, plot.dat$vars, mean)
   # Labels for variables to go on x-axis of plot
-  labels  <- c('F1\n amplitude','A1-P0','A1-P1','A1-P2',
-               'F2\n amplitude', 'F3\n amplitude', 'A3-P0','Spectral\n COG',
-               'F1\n frequency','F1\n bandwidth','F2\n frequency','F2\n bandwidth','F3\n frequency','F3\n bandwidth',
-               'H1-H2','P0\n amplitude','P0\n prominence','P1\n amplitude','P1\n prominence','P2\n amplitude')
+  labels  <- c('F1\namplitude','A1-P0','A1-P1','A1-P2',
+               'F2\namplitude', 'F3\namplitude', 'A3-P0','Spectral\nCOG',
+               'F1\nfrequency','F1\nbandwidth','F2\nfrequency','F2\nbandwidth','F3\nfrequency','F3\nbandwidth',
+               'H1-H2','P0\namplitude','P0\nprominence','P1\namplitude','P1\nprominence','P2\namplitude')
   order   <- sort(abs(means), decreasing=T) # Sort the variables by decreasing importance
   ord.seq <- match(names(order),names(means)) # Get the linear sequence of the sorting
   labels  <- labels[ord.seq] # Re-order the labels to match the sequence
