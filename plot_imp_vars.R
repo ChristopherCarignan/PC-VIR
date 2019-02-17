@@ -79,7 +79,7 @@ plot_imp_vars <- function(coeffs,features){
     scale_x_discrete(name='', labels=labels) + theme_classic() + 
     theme(axis.text.x=element_text(size=12, angle=60, vjust=0.7),
           axis.title=element_text(size=16),axis.text=element_text(size=12),
-          plot.margin = margin(0.5, 0.5, -0.75, 0.5, "cm"),) + 
+          plot.margin = margin(0.5, 0.5, -0.75, 0.5, "cm")) + 
     ylab('Coefficient of contribution to nasality') + xlab('')
   
   return(p)
