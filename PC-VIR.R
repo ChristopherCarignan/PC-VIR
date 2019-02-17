@@ -1,6 +1,6 @@
 # Reconstruct the important variables from the PCA-based regression models
 
-PC_VIR <- function(PCdata, traindata, mylogit, features){
+PC_VIR <- function(PCdata, traindata, mylogit, features, adjust = F){
   coeffs <- c()
   speakers <- unique(traindata$speaker)
   
@@ -9,13 +9,26 @@ PC_VIR <- function(PCdata, traindata, mylogit, features){
     z.values  <- coef(summary(this.mod))[,"z value"] # Get the z-statistics for the PCs in the model
     pc.num    <- length(z.values) - 1 # How many PCs were there?
     
-    # Preallocate an array for the PC-VIR coefficients
+    # Preallocate arrays for the PC-VIR coefficients
     coeffs[[speaker]] <- data.frame(matrix(ncol = length(features), nrow = 0))
     colnames(coeffs[[speaker]]) <- features
     
     for (pc in 1:pc.num){
-      this.z.val    <- z.values[pc+1] # Get the z-statistic from the logistic model for this PC
-      these.coeffs  <- t(as.data.frame(PCdata[[speaker]]$model$rotation[,pc])) # Get the PC coefficients
+      # Get the z-statistic from the logistic model for this PC
+      this.z.val  <- z.values[pc+1] 
+      
+      # Optional adjustment of z-statistic to control for Type I error 
+      # (Bonferroni correction based on number of PCs retained)
+      if (adjust){
+        p.adj <- 2*pnorm(-abs(this.z.val))*pc.num # adjust the p-value
+        if (p.adj > 1){
+          p.adj <- 1
+        }
+        this.z.val <- sign(this.z.val)*qnorm(1-p.adj/2) # adjust the z-statistic
+      }
+      
+      # Get the PC coefficients
+      these.coeffs  <- t(as.data.frame(PCdata[[speaker]]$model$rotation[,pc]))
       
       # Multiply the PC coefficients by the z-statistic for the PC to reconstruct the variable importance
       coeffs[[speaker]] <- rbind(coeffs[[speaker]],(these.coeffs * this.z.val)) 
