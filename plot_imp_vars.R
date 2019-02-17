@@ -62,8 +62,6 @@ plot_imp_vars <- function(coeffs,features){
     # Lines for levels of strong importance
     geom_hline(yintercept=1.372, linetype=2, lwd=0.7) + 
     geom_hline(yintercept=-1.372, linetype=2, lwd=0.7) + 
-    # This geom has to be added twice for some reason: once before and once after the colored fields
-    geom_boxplot(notch=F,fill='white') + stat_summary(fun.y=mean, geom="point", size=4, pch=21, fill='lightgray') +
     # Distinguish variables of no importance
     geom_rect(data=NULL,aes(xmin=moderate,xmax=length(features)+1,ymin=-Inf,ymax=Inf),fill="red",alpha=0.002) + 
     # Distinguish variables of moderate importance
@@ -79,7 +77,9 @@ plot_imp_vars <- function(coeffs,features){
     annotate(geom="text", x=mean(c(strong,moderate)), y=max(plot.dat$dat), label="moderate") +
     annotate(geom="text", x=mean(c(moderate,length(features)+1)), y=max(plot.dat$dat), label="no import.") +
     scale_x_discrete(name='', labels=labels) + theme_classic() + 
-    theme(axis.text.x=element_text(size=12, angle=45, vjust=0.75),axis.title=element_text(size=16),axis.text=element_text(size=12)) + 
+    theme(axis.text.x=element_text(size=12, angle=45, vjust=0.75),
+          axis.title=element_text(size=16),axis.text=element_text(size=12),
+          plot.margin = margin(0.5, 0.5, -0.75, 0.5, "cm"),) + 
     ylab('Coefficient of contribution to nasality') + xlab('')
   
   return(p)
