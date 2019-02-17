@@ -77,7 +77,7 @@ plot_imp_vars <- function(coeffs,features){
     annotate(geom="text", x=mean(c(strong,moderate)), y=max(plot.dat$dat), label="moderate") +
     annotate(geom="text", x=mean(c(moderate,length(features)+1)), y=max(plot.dat$dat), label="no import.") +
     scale_x_discrete(name='', labels=labels) + theme_classic() + 
-    theme(axis.text.x=element_text(size=12, angle=45, vjust=0.75),
+    theme(axis.text.x=element_text(size=12, angle=60, vjust=0.7),
           axis.title=element_text(size=16),axis.text=element_text(size=12),
           plot.margin = margin(0.5, 0.5, -0.75, 0.5, "cm"),) + 
     ylab('Coefficient of contribution to nasality') + xlab('')
