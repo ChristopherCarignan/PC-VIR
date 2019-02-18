@@ -35,7 +35,7 @@ for (feature in 1:length(features)){
                            " + (1 + ", features[feature], "|phone) + (1|speaker)"))
   
   glmm <- glmer(fmla, data=glmm.dat, family='binomial') # create the model
-
+  
   # log the model results
   glmm.results$var[feature]    <- features[feature]
   glmm.results$est.[feature]   <- coef(summary(glmm))[2]
@@ -47,18 +47,34 @@ glmm.results[order(abs(glmm.results$p.val)),] # display the results, ordered by 
 
 # Compare the results for PC-VIR and the multiple logistic mixed effects models
 var.order <- glmm.results$var[order(abs(glmm.results$z.val))]
-data1     <- glmm.results$z.val[order(abs(glmm.results$z.val))]
+
+data1     <- glmm.results$z.val[match(var.order, glmm.results$var)]
+thresh1   <- glmm.results$p.val[match(var.order, glmm.results$var)] <= 0.05/20
+
 data2     <- rowMeans(PC.VIR.coeffs)[match(var.order, rownames(PC.VIR.coeffs))]
+thresh2   <- abs(data2[match(var.order, names(data2))]) >= 0.98
+
+threshes  <- c()
+threshes[thresh1 & !thresh2]  <- "GLMMs"
+threshes[!thresh1 & thresh2]  <- "PC-VIR"
+threshes[thresh1 & thresh2]   <- "both"
+threshes[!thresh1 & !thresh2]   <- "neither"
+
 comb.dat  <- as.data.frame(cbind(data1,data2))
-sp <- ggscatter(comb.dat, x = "data1", y = "data2",
-                add = "reg.line",  # Add regressin line
+comb.dat$Significance <- threshes
+
+sp <- ggscatter(comb.dat, x = "data1", y = "data2", shape = "Significance", color = "Significance", size = 4,
+                add = "reg.line",  # Add regression line
                 add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
                 conf.int = TRUE, # Add confidence interval
+                
                 xlab = "z-statistic from logistic mixed effects models",
                 ylab = "PC-VIR coefficient (speaker average)"
 )
 # Add correlation coefficient
-sp + stat_cor(method = "pearson", size=6) + font("xlab", size=16) + font("ylab", size=16) + font("xy.text", size=14)
+sp + stat_cor(method = "pearson", size=6) + font("xlab", size=16) + font("ylab", size=16) + font("xy.text", size=14) + 
+  font("legend.title", size=16) + font("legend.text", size=16) + 
+  scale_shape_discrete(breaks=c("PC-VIR","GLMMs","both","neither")) + scale_color_discrete(breaks=c("PC-VIR","GLMMs","both","neither"))
 
 
 ## Data preparation for model validation
@@ -136,7 +152,7 @@ for (speaker in unique(train.dat$speaker)){
   
   # Perform a new PC analysis on all speaker data, for only the variables selected by the PC-VIR model
   pca <- prcomp(all.dat[all.dat$speaker==speaker,coeff.names])
-
+  
   # Combine nasality factor and the PC scores for the binomial logistic regression
   pca.dat <- cbind(all.dat$nasality[all.dat$speaker==speaker],as.data.frame(pca$x))
   names(pca.dat)[1] <- 'nasality'
