@@ -16,12 +16,6 @@ features  <- c('a1.amp','a2.amp','a3.amp',       # Formant harmonic amplitudes
 # Run the function to perform speaker-wise PCA on the acoustic features
 PC.data <- feature_PCA(ac.data, features)
 
-# Get the number of PCs retained
-pcs <- c()
-for (pc in 1: length(PC.data)){
-  pcs[pc] <- ncol(PC.data[[pc]]$scores)
-}
-
 # Lists of phones for the nasal-oral binary training
 nasals  <- c('n','m','N','n_d','J')
 orals   <- c('d','t','b','p','g','k')
