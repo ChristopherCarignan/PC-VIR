@@ -7,6 +7,7 @@ PC_VIR <- function(PCdata, traindata, mylogit, features, adjust = F){
   for (speaker in speakers){
     this.mod  <- mylogit[[speaker]] # Get the fitted logistic model for the speaker
     z.values  <- coef(summary(this.mod))[,"z value"] # Get the z-statistics for the PCs in the model
+    p.values  <- coef(summary(this.mod))[,"Pr(>|z|)"] # Get the p-values for the PCs in the model
     pc.num    <- length(z.values) - 1 # How many PCs were there?
     
     # Preallocate arrays for the PC-VIR coefficients
@@ -14,13 +15,14 @@ PC_VIR <- function(PCdata, traindata, mylogit, features, adjust = F){
     colnames(coeffs[[speaker]]) <- features
     
     for (pc in 1:pc.num){
-      # Get the z-statistic from the logistic model for this PC
-      this.z.val  <- z.values[pc+1] 
+      # Get the statistic from the logistic model for this PC
+      this.z.val  <- z.values[pc+1]
+      this.p.val  <- p.values[pc+1]
       
       # Optional adjustment of z-statistic to control for Type I error 
       # (Bonferroni correction based on number of PCs retained)
       if (adjust){
-        p.adj <- 2*pnorm(-abs(this.z.val))*pc.num # adjust the p-value
+        p.adj <- pc.num*this.p.val # adjust the p-value
         if (p.adj > 1){
           p.adj <- 1
         }
