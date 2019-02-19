@@ -11,7 +11,7 @@ set.seed(123) # Select random seed for replicability
 
 all.dat <- train.data # Binary training data from oral-nasal_training.R
 
-all.dat$ID <- as.numeric(as.factor(paste0(all.dat$tokennum,all.dat$phonenum,all.dat$speaker))) # Unique ID by token
+all.dat$ID <- as.numeric(as.factor(paste0(all.dat$tokennum,all.dat$phonenum,all.dat$speaker,all.dat$point))) # Unique ID by item
 all.dat$nasality2  <- as.numeric(all.dat$nasality=='nasal') # Nasality as a non-factor number: 0, 1
 
 
@@ -58,7 +58,7 @@ threshes  <- c()
 threshes[thresh1 & !thresh2]  <- "GLMMs"
 threshes[!thresh1 & thresh2]  <- "PC-VIR"
 threshes[thresh1 & thresh2]   <- "both"
-threshes[!thresh1 & !thresh2]   <- "neither"
+threshes[!thresh1 & !thresh2] <- "neither"
 
 comb.dat  <- as.data.frame(cbind(data1,data2))
 comb.dat$Significance <- threshes
@@ -119,6 +119,7 @@ for (speaker in unique(train.dat$speaker)){
   
   this.mod  <- mylogit[[speaker]] # Get the fitted logistic model for the speaker
   z.values  <- coef(summary(this.mod))[,"z value"] # Get the z-statistics for the PCs in the model
+  p.values  <- coef(summary(this.mod))[,"Pr(>|z|)"] # Get the p-values for the PCs in the model
   pc.num    <- length(z.values) - 1 # How many PCs were there?
   
   # Preallocate an array for the PC-VIR coefficients
@@ -127,15 +128,16 @@ for (speaker in unique(train.dat$speaker)){
   
   # Do the variable importance reconstruction
   for (pc in 1:pc.num){
-    # Get the z-statistic from the logistic model for this PC
-    this.z.val    <- z.values[pc+1]
+    # Get the statistic from the logistic model for this PC
+    this.z.val  <- z.values[pc+1]
+    this.p.val  <- p.values[pc+1]
     
     # Type I error adjustment for number of PCs (Bonferroni correction)
-    p.adj <- 2*pnorm(-abs(this.z.val))*pc.num
+    p.adj <- pc.num*this.p.val # adjust the p-value
     if (p.adj > 1){
       p.adj <- 1
     }
-    this.z.val <- sign(this.z.val)*qnorm(1-p.adj/2) 
+    this.z.val <- sign(this.z.val)*qnorm(1-p.adj/2)
     
     # Get the PC coefficients
     these.coeffs  <- t(as.data.frame(PC.data[[speaker]]$model$rotation[,pc]))
@@ -173,9 +175,10 @@ for (speaker in unique(train.dat$speaker)){
   # Predict nasality probabilities and add them to the test data matrix
   test.dat$PCVIR.pred[test.dat$speaker==speaker] <- predict(bin.mod, type="response", newdata=as.data.frame(PC.speaker))
 }
-# Find the difference (i.e., error) between the predicted values and a perfect response (0,1)
-test.dat$PCVIR.diff <- test.dat$PCVIR.pred - test.dat$nasality2
-
+# Convert the predicted response values to categorical labels
+test.dat$PCVIR.pred2[test.dat$PCVIR.pred < 0.5] <- "oral"
+test.dat$PCVIR.pred2[test.dat$PCVIR.pred >= 0.5] <- "nasal"
+test.dat <- test.dat %>% mutate(PCVIR.acc = 1*(nasality == PCVIR.pred2))
 
 ## Model comparison/validation
 # The results will now be compared against the same training and testing data sets, 
@@ -193,7 +196,7 @@ for (speaker in unique(train.dat$speaker)){
   # for each component retained in the model (0 = not significant, 1 = significant)
   # We will select only those variables that are significant for all of the retained components
   sig.facs <- rowSums(pls.mod$pvalstep)/ncol(pls.mod$pvalstep)
-  pls.to.keep <- features[sig.facs==1]
+  pls.to.keep <- features[sig.facs>0]
   
   # Perform a new PC analysis on all speaker data, for only the variables selected by the PLS-DA model
   pca <- prcomp(all.dat[all.dat$speaker==speaker,pls.to.keep])
@@ -218,8 +221,10 @@ for (speaker in unique(train.dat$speaker)){
   # Predict nasality probabilities and add them to the test data matrix
   test.dat$PLSDA.pred[test.dat$speaker==speaker] <- predict(bin.mod, type="response", newdata=as.data.frame(PC.speaker))
 }
-# Find the difference (i.e., error) between the predicted values and a perfect response (0,1)
-test.dat$PLSDA.diff <- test.dat$PLSDA.pred - test.dat$nasality2
+# Convert the predicted response values to categorical labels
+test.dat$PLSDA.pred2[test.dat$PLSDA.pred < 0.5] <- "oral"
+test.dat$PLSDA.pred2[test.dat$PLSDA.pred >= 0.5] <- "nasal"
+test.dat <- test.dat %>% mutate(PLSDA.acc = 1*(nasality == PLSDA.pred2))
 
 
 ## Model validation (goodness of fit)
@@ -235,13 +240,7 @@ pchisq(mean(HL.tests$PCVIR), df=dof)
 # Second, the model based on the PLS-DA method:
 pchisq(mean(HL.tests$PLSDA), df=dof)
 
-# Conclusion: both methods result in models that fit the data well
-
 
 ## Model validation (accuracy of prediction)
-# Compare the absolute error between the two methods
-mean(abs(test.dat$PCVIR.diff))
-mean(abs(test.dat$PLSDA.diff))
-wilcox.test(abs(test.dat$PCVIR.diff),abs(test.dat$PLSDA.diff))
-
-# Conclusion: the PC-VIR method provides significantly more accurate predictions on new data, compared to the PLS-DA method
+mean(test.dat$PCVIR.pred2 == test.dat$nasality)
+mean(test.dat$PLSDA.pred2 == test.dat$nasality)
