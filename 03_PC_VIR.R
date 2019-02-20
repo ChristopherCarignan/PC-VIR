@@ -1,6 +1,15 @@
-# Reconstruct the important variables from the PCA-based regression models
+# Filename: 03_PC_VIR.R
+# Date: 2019-02-20
+# Author: Christopher Carignan
+# Associate investigator: Ander Egurtzegi
+# Email: c.carignan@phonetik.uni-muenchen.de
+# Institution: Institute of Phonetics and Speech Processing (IPS), Ludwig-Maximilians-Universität München, Munich, Germany
+# Description:
+#   Function called from within the script 00_PC-VIR_analysis.R
+#   Reconstructs the important variables (from acoustic_data.Rda) from the PCA-based regression models output by PC_VIR() from 03_PC_VIR.R
 
-PC_VIR <- function(PCdata, traindata, mylogit, features, adjust = F){
+
+PC_VIR <- function(PCdata, traindata, mylogit, features, adjust=F){
   coeffs <- c()
   speakers <- unique(traindata$speaker)
   

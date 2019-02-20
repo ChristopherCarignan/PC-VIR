@@ -1,4 +1,13 @@
-# Create a plot of the variables determined to be at least moderately important to the binary distinction
+# Filename: 04_plot_imp_vars.R
+# Date: 2019-02-20
+# Author: Christopher Carignan
+# Associate investigator: Ander Egurtzegi
+# Email: c.carignan@phonetik.uni-muenchen.de
+# Institution: Institute of Phonetics and Speech Processing (IPS), Ludwig-Maximilians-Universität München, Munich, Germany
+# Description:
+#   Function called from within the script 00_PC-VIR_analysis.R
+#   Creates a plot of the variables identified as "moderately" and "strongly" important, according to the output of PC_VIR() in 03_PC_VIR.R
+
 
 plot_imp_vars <- function(coeffs,features){
   library(ggplot2)
@@ -72,7 +81,7 @@ plot_imp_vars <- function(coeffs,features){
     # Distinguish variables of strong importance
     geom_vline(xintercept=strong, linetype=1, col='gray') +
     geom_rect(data=NULL,aes(xmin=0,xmax=strong,ymin=-Inf,ymax=Inf),fill="green",alpha=0.002) + 
-    # Add the boxplot geom again
+    # Add the boxplots
     geom_boxplot(notch=F,fill='white') + stat_summary(fun.y=mean, geom="point", size=4, pch=21, fill='lightgray') + 
     # Set text for levels of importance
     annotate(geom="text", x=mean(c(0,strong)), y=max(plot.dat$dat), label="strong") +

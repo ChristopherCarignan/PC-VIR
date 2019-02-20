@@ -1,5 +1,15 @@
-### PCA of acoustic features
-feature_PCA <- function(my.data,features){
+# Filename: 01_feature_PCA.R
+# Date: 2019-02-20
+# Author: Christopher Carignan
+# Associate investigator: Ander Egurtzegi
+# Email: c.carignan@phonetik.uni-muenchen.de
+# Institution: Institute of Phonetics and Speech Processing (IPS), Ludwig-Maximilians-Universität München, Munich, Germany
+# Description:
+#   Function called from within the script 00_PC-VIR_analysis.R
+#   Performs a principal components analysis (PCA) on the acoustic data from acoustic_data.Rda
+
+
+feature_PCA <- function(my.data, features){
   PCdata <- c()
   
   # Separate PCA models are performed for each speaker

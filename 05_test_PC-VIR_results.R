@@ -1,4 +1,13 @@
-# Test results from principal components varible importance reconstruction (PC-VIR)
+# Filename: 04_plot_imp_vars.R
+# Date: 2019-02-20
+# Author: Christopher Carignan
+# Associate investigator: Ander Egurtzegi
+# Email: c.carignan@phonetik.uni-muenchen.de
+# Institution: Institute of Phonetics and Speech Processing (IPS), Ludwig-Maximilians-Universität München, Munich, Germany
+# Description:
+#   Optional function called from within the script 00_PC-VIR_analysis.R
+#   Tests results from principal components varible importance reconstruction (PC-VIR)
+#   NB: the analyses performed in 00_PC-VIR_analysis.R must be completed before the testing performed in this script
 
 library(plsRglm)
 library(dplyr)

@@ -1,7 +1,25 @@
-### Principal Components Variable Importance Reconstruction (PC-VIR)
+# Filename: 00_PC-VIR_analysis.R
+# Date: 2019-02-20
+# Author: Christopher Carignan
+# Associate investigator: Ander Egurtzegi
+# Email: c.carignan@phonetik.uni-muenchen.de
+# Institution: Institute of Phonetics and Speech Processing (IPS), Ludwig-Maximilians-Universität München, Munich, Germany
+# Description:
+#   This file contains the data and code to replicate the Principal Components Variable Importance Reconstruction (PC-VIR) from:
+#   Carignan and Egurtzegi (under revision), Journal of the Acoustical Society of America
+#   In order to perform the analysis, the following functions from the following scripts must be be loaded into the R environment (by running the scripts):
+#   feature_PCA() from 01_feature_PCA.R
+#   logistic_training() from 02_logistic_training.R
+#   PC_VIR() from 03_PC_VIR.R
+#   plot_imp_vars() from 04_plot_imp_vars.R
 
+
+# Install all packages that are used in the analysis
 install.packages(c("plsRglm","dplyr","ResourceSelection","lme4","lmerTest","ggpubr","ggplot2"))
 
+# NB: make sure to set your working directory to where the acoustic_data.Rda file has been saved using setwd()
+
+# Load the data set
 load('acoustic_data.Rda')
 
 # Acoustic features of nasality from Styler (2017)
@@ -33,11 +51,13 @@ logit.mods  <- bin.results[[3]] # Speaker-specific binary models
 # Run the function to reconstruct the important variables from the PCA-based regression models
 PC.VIR.coeffs <- PC_VIR(PC.data, train.data, logit.mods, features)
 
-# The function also has an optional adjustment for Type I error
-PC.VIR.coeffs <- PC_VIR(PC.data, train.data, logit.mods, features, adjust = T)
+# NB: The function also has an optional adjustment for Type I error:
+# PC.VIR.coeffs <- PC_VIR(PC.data, train.data, logit.mods, features, adjust = T)
 
 # Plot the important variables
 plot_imp_vars(PC.VIR.coeffs, features)
 
-## Test and validate results using the following function: 
-## test_PC-VIR_results.R
+
+## Optional ##
+# Test and validate results using the code provided in the following script:
+# 05_test_PC-VIR_results.R

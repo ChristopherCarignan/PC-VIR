@@ -1,4 +1,14 @@
-# Perform binary logistic training on oral and nasalized context.test (in this case = vowel)
+# Filename: 02_logistic_training.R
+# Date: 2019-02-20
+# Author: Christopher Carignan
+# Associate investigator: Ander Egurtzegi
+# Email: c.carignan@phonetik.uni-muenchen.de
+# Institution: Institute of Phonetics and Speech Processing (IPS), Ludwig-Maximilians-Universität München, Munich, Germany
+# Description:
+#   Function called from within the script 00_PC-VIR_analysis.R
+#   Perform binary logistic training on oral and nasalized context.test (in this case = vowel) 
+#   Requires data from acoustic_data.Rda
+
 
 logistic_training <- function(ac.data, PC.data, context.0, context.1, context.test){
   # For the purposes of the research questions pursued with this data set:
