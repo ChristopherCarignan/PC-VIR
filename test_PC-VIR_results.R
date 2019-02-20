@@ -11,7 +11,7 @@ set.seed(123) # Select random seed for replicability
 
 all.dat <- train.data # Binary training data from oral-nasal_training.R
 
-all.dat$ID <- as.numeric(as.factor(paste0(all.dat$tokennum,all.dat$phonenum,all.dat$speaker,all.dat$point))) # Unique ID by item
+all.dat$ID <- as.numeric(as.factor(paste0(all.dat$tokennum, all.dat$phonenum, all.dat$speaker, all.dat$point))) # Unique ID by item
 all.dat$nasality2  <- as.numeric(all.dat$nasality=='nasal') # Nasality as a non-factor number: 0, 1
 
 
@@ -22,8 +22,7 @@ glmm.dat$nasality <- relevel(glmm.dat$nasality, ref="oral")
 # normalize acoustic variables for each speaker (z-score transformation)
 for (speaker in unique(glmm.dat$speaker)){
   for (feature in features){
-    glmm.dat[[feature]][glmm.dat$speaker==speaker] <- scale(glmm.dat[[feature]][glmm.dat$speaker==speaker], 
-                                                            center=T, scale=T)
+    glmm.dat[[feature]][glmm.dat$speaker==speaker] <- scale(glmm.dat[[feature]][glmm.dat$speaker==speaker], center=T, scale=T)
   }
 }
 
@@ -31,8 +30,7 @@ glmm.results <- c()
 for (feature in 1:length(features)){
   # formula for logistic mixed effects model
   # random slopes/intercepts by phone, random intercepts by speaker
-  fmla <- as.formula(paste("nasality ~ ", features[feature],
-                           " + (1 + ", features[feature], "|phone) + (1|speaker)"))
+  fmla <- as.formula(paste("nasality ~ ", features[feature], " + (1 + ", features[feature], "|phone) + (1|speaker)"))
   
   glmm <- glmer(fmla, data=glmm.dat, family='binomial') # create the model
   
@@ -78,7 +76,7 @@ sp <- ggscatter(comb.dat, x="data1", y="data2", shape="Significance", color="Sig
 # Add correlation coefficient
 sp + stat_cor(method="pearson", size=6) + font("xlab", size=16) + font("ylab", size=16) + font("xy.text", size=14) + 
   font("legend.title", size=16) + font("legend.text", size=16) + 
-  scale_shape_discrete(solid=F,breaks=c("PC-VIR","GLMMs","both","neither")) + 
+  scale_shape_discrete(solid=F, breaks=c("PC-VIR","GLMMs","both","neither")) + 
   scale_color_discrete(breaks=c("PC-VIR","GLMMs","both","neither"))
 
 
@@ -104,14 +102,14 @@ for (speaker in unique(train.dat$speaker)){
   PCs         <- PC.data[[speaker]]$scores # Get the PC scores for the speaker
   PCs         <- PCs[speakerdat$rownum,] # Only include the PC scores that correspond to the training data items
   
-  mod.dat[[speaker]] <- cbind.data.frame(speakerdat[,'nasality'],PCs) # Combine PC scores and nasality factor
+  mod.dat[[speaker]] <- cbind.data.frame(speakerdat[,'nasality'], PCs) # Combine PC scores and nasality factor
   colnames(mod.dat[[speaker]])[1] <- 'nasality'
   
   # Relevel the factor so that oral = 0, nasal = 1
   mod.dat[[speaker]]$nasality <- relevel(mod.dat[[speaker]]$nasality, ref="oral")
   
   # Run the logistic regression model
-  mylogit[[speaker]] <- glm(nasality ~ ., data = mod.dat[[speaker]], family = "binomial")
+  mylogit[[speaker]] <- glm(nasality ~ ., data=mod.dat[[speaker]], family="binomial")
 }
 
 
@@ -128,7 +126,7 @@ for (speaker in unique(train.dat$speaker)){
   pc.num    <- length(z.values) - 1 # How many PCs were there?
   
   # Preallocate an array for the PC-VIR coefficients
-  coeffs <- data.frame(matrix(ncol = length(features), nrow = 0))
+  coeffs <- data.frame(matrix(ncol=length(features), nrow=0))
   colnames(coeffs) <- features
   
   # Do the variable importance reconstruction
@@ -158,15 +156,15 @@ for (speaker in unique(train.dat$speaker)){
   coeff.names   <- rownames(coeffs)[to.keep]
   
   # Perform a new PC analysis on all speaker data, for only the variables selected by the PC-VIR model
-  pca <- prcomp(all.dat[all.dat$speaker==speaker,coeff.names])
+  pca <- prcomp(all.dat[all.dat$speaker==speaker, coeff.names])
   
   # Combine nasality factor and the PC scores for the binomial logistic regression
-  pca.dat <- cbind(all.dat$nasality[all.dat$speaker==speaker],as.data.frame(pca$x))
+  pca.dat <- cbind(all.dat$nasality[all.dat$speaker==speaker], as.data.frame(pca$x))
   names(pca.dat)[1] <- 'nasality'
   pca.dat$nasality  <- relevel(pca.dat$nasality, ref="oral")
   
   # New PCA-based logistic regression on only the selected variables
-  bin.mod <- glm(nasality ~ ., data = pca.dat, family = "binomial")
+  bin.mod <- glm(nasality ~ ., data=pca.dat, family="binomial")
   
   # Perform Hosmer-Lemeshow test for goodness of fit (model validation)
   HL.test <- hoslem.test(bin.mod$y, fitted(bin.mod))
@@ -178,11 +176,11 @@ for (speaker in unique(train.dat$speaker)){
   PC.speaker  <- pca$x[all.dat$rownum[all.dat$speaker==speaker] %in% test.dat$rownum[test.dat$speaker==speaker],]
   
   # Predict nasality probabilities and add them to the test data matrix
-  test.dat$PCVIR.pred[test.dat$speaker==speaker] <- predict(bin.mod, type="response", newdata=as.data.frame(PC.speaker))
+  test.dat$PCVIR.pred[test.dat$speaker==speaker]  <- predict(bin.mod, type="response", newdata=as.data.frame(PC.speaker))
 }
 # Convert the predicted response values to categorical labels
-test.dat$PCVIR.pred2[test.dat$PCVIR.pred < 0.5] <- "oral"
-test.dat$PCVIR.pred2[test.dat$PCVIR.pred >= 0.5] <- "nasal"
+test.dat$PCVIR.pred2[test.dat$PCVIR.pred < 0.5]   <- "oral"
+test.dat$PCVIR.pred2[test.dat$PCVIR.pred >= 0.5]  <- "nasal"
 test.dat <- test.dat %>% mutate(PCVIR.acc = 1*(nasality == PCVIR.pred2))
 
 
@@ -193,7 +191,7 @@ HL.tests$PLSLR <- c()
 for (speaker in unique(train.dat$speaker)){
   speak.dat <- train.dat[train.dat$speaker==speaker,] # Get the training data for the speaker
   
-  plsa <- as.formula(paste("nasality2 ~ ", paste(features, collapse= "+"))) # PLS-LR formula as string
+  plsa <- as.formula(paste("nasality2 ~ ", paste(features, collapse="+"))) # PLS-LR formula as string
   
   # Build the PLS-LR model: predicting nasality from acoustic features in training set
   pls.mod <- plsRglm(plsa, data=speak.dat, modele='pls-glm-logistic', verbose=F, pvals.expli=T)
@@ -205,15 +203,15 @@ for (speaker in unique(train.dat$speaker)){
   pls.to.keep <- features[sig.facs>0]
   
   # Perform a new PC analysis on all speaker data, for only the variables selected by the PLS-LR model
-  pca <- prcomp(all.dat[all.dat$speaker==speaker,pls.to.keep])
+  pca <- prcomp(all.dat[all.dat$speaker==speaker, pls.to.keep])
   
   # Combine nasality factor and the PC scores for the binomial logistic regression
-  pca.dat <- cbind(all.dat$nasality[all.dat$speaker==speaker],as.data.frame(pca$x))
+  pca.dat <- cbind(all.dat$nasality[all.dat$speaker==speaker], as.data.frame(pca$x))
   names(pca.dat)[1] <- 'nasality'
   pca.dat$nasality  <- relevel(pca.dat$nasality, ref="oral")
   
   # New PCA-based logistic regression on only the selected variables
-  bin.mod <- glm(nasality ~ ., data = pca.dat, family = "binomial")
+  bin.mod <- glm(nasality ~ ., data=pca.dat, family="binomial")
   
   # Perform Hosmer-Lemeshow test for goodness of fit (model validation)
   HL.test <- hoslem.test(bin.mod$y, fitted(bin.mod))
@@ -228,8 +226,8 @@ for (speaker in unique(train.dat$speaker)){
   test.dat$PLSLR.pred[test.dat$speaker==speaker] <- predict(bin.mod, type="response", newdata=as.data.frame(PC.speaker))
 }
 # Convert the predicted response values to categorical labels
-test.dat$PLSLR.pred2[test.dat$PLSLR.pred < 0.5] <- "oral"
-test.dat$PLSLR.pred2[test.dat$PLSLR.pred >= 0.5] <- "nasal"
+test.dat$PLSLR.pred2[test.dat$PLSLR.pred < 0.5]   <- "oral"
+test.dat$PLSLR.pred2[test.dat$PLSLR.pred >= 0.5]  <- "nasal"
 test.dat <- test.dat %>% mutate(PLSLR.acc = 1*(nasality == PLSLR.pred2))
 
 
