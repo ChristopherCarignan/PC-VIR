@@ -1,6 +1,6 @@
 ### Principal Components Variable Importance Reconstruction (PC-VIR)
 
-library(ggplot2)
+install.packages(c("plsRglm","dplyr","ResourceSelection","lme4","lmerTest","ggpubr","ggplot2"))
 
 load('acoustic_data.Rda')
 
