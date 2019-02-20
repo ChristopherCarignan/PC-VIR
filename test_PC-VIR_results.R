@@ -48,37 +48,42 @@ glmm.results[order(abs(glmm.results$p.val)),] # display the results, ordered by 
 # Compare the results for PC-VIR and the multiple logistic mixed effects models
 var.order <- glmm.results$var[order(abs(glmm.results$z.val))]
 
+# Get the statistically relevant variables according to the GLMMs (Bonferroni corrected)
 data1     <- glmm.results$z.val[match(var.order, glmm.results$var)]
-thresh1   <- glmm.results$p.val[match(var.order, glmm.results$var)] <= 0.05/20
+thresh1   <- glmm.results$p.val[match(var.order, glmm.results$var)] <= 0.05/length(features)
 
+# Get the statistically relevant variables according to the PC-VIR model (at least moderate importance)
 data2     <- rowMeans(PC.VIR.coeffs)[match(var.order, rownames(PC.VIR.coeffs))]
 thresh2   <- abs(data2[match(var.order, names(data2))]) >= 0.98
 
 threshes  <- c()
-threshes[thresh1 & !thresh2]  <- "GLMMs"
-threshes[!thresh1 & thresh2]  <- "PC-VIR"
-threshes[thresh1 & thresh2]   <- "both"
-threshes[!thresh1 & !thresh2] <- "neither"
+threshes[thresh1 & !thresh2]  <- "GLMMs"    # variables identified as significant in the GLMMs (but not with PC-VIR)
+threshes[!thresh1 & thresh2]  <- "PC-VIR"   # variables identified as significant with PC-VIR (but not in the GLMMs)
+threshes[thresh1 & thresh2]   <- "both"     # variables identified as significant with both methods
+threshes[!thresh1 & !thresh2] <- "neither"  # variables not identified as significant with either method
 
+# combine data
 comb.dat  <- as.data.frame(cbind(data1,data2))
 comb.dat$Significance <- threshes
 
-sp <- ggscatter(comb.dat, x = "data1", y = "data2", shape = "Significance", color = "Significance", size = 4,
-                add = "reg.line",  # Add regression line
-                add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
-                conf.int = TRUE, # Add confidence interval
+# create a scatter plot of results (with regression line and 95% confidence intervals)
+sp <- ggscatter(comb.dat, x="data1", y="data2", shape="Significance", color="Significance", size=8,
+                add="reg.line",  # Add regression line
+                add.params=list(color="blue", fill="lightgray"),
+                conf.int=T, # Add confidence interval
                 
-                xlab = "z-statistic from logistic mixed effects models",
-                ylab = "PC-VIR coefficient (speaker average)"
+                xlab="z-statistic from logistic mixed effects models",
+                ylab="PC-VIR coefficient (speaker average)"
 )
 # Add correlation coefficient
-sp + stat_cor(method = "pearson", size=6) + font("xlab", size=16) + font("ylab", size=16) + font("xy.text", size=14) + 
+sp + stat_cor(method="pearson", size=6) + font("xlab", size=16) + font("ylab", size=16) + font("xy.text", size=14) + 
   font("legend.title", size=16) + font("legend.text", size=16) + 
-  scale_shape_discrete(breaks=c("PC-VIR","GLMMs","both","neither")) + scale_color_discrete(breaks=c("PC-VIR","GLMMs","both","neither"))
+  scale_shape_discrete(solid=F,breaks=c("PC-VIR","GLMMs","both","neither")) + 
+  scale_color_discrete(breaks=c("PC-VIR","GLMMs","both","neither"))
 
 
 ## Data preparation for model validation
-HL.tests <- c() # Will be used to store the results of the Hosmer-Lemeshow test for model validation
+HL.tests <- c() # Will be used to store the results of the Hosmer-Lemeshow tests for model validation
 
 # Training data for validation: 80%
 # Testing data for validatin: 20%
@@ -180,16 +185,17 @@ test.dat$PCVIR.pred2[test.dat$PCVIR.pred < 0.5] <- "oral"
 test.dat$PCVIR.pred2[test.dat$PCVIR.pred >= 0.5] <- "nasal"
 test.dat <- test.dat %>% mutate(PCVIR.acc = 1*(nasality == PCVIR.pred2))
 
+
 ## Model comparison/validation
 # The results will now be compared against the same training and testing data sets, 
-# using partial least squares discriminant analysis (PLS-DA) to train and predict values
-HL.tests$PLSDA <- c()
+# using partial least squares logistic regression (PLS-LR) to train and predict values
+HL.tests$PLSLR <- c()
 for (speaker in unique(train.dat$speaker)){
   speak.dat <- train.dat[train.dat$speaker==speaker,] # Get the training data for the speaker
   
-  plsa <- as.formula(paste("nasality2 ~ ", paste(features, collapse= "+"))) # PLS-DA formula as string
+  plsa <- as.formula(paste("nasality2 ~ ", paste(features, collapse= "+"))) # PLS-LR formula as string
   
-  # Build the PLS-DA model: predicting nasality from acoustic features in training set
+  # Build the PLS-LR model: predicting nasality from acoustic features in training set
   pls.mod <- plsRglm(plsa, data=speak.dat, modele='pls-glm-logistic', verbose=F, pvals.expli=T)
   
   # The plsRglm() function provides the ability to output whether the invididual variables are significant
@@ -198,7 +204,7 @@ for (speaker in unique(train.dat$speaker)){
   sig.facs <- rowSums(pls.mod$pvalstep)/ncol(pls.mod$pvalstep)
   pls.to.keep <- features[sig.facs>0]
   
-  # Perform a new PC analysis on all speaker data, for only the variables selected by the PLS-DA model
+  # Perform a new PC analysis on all speaker data, for only the variables selected by the PLS-LR model
   pca <- prcomp(all.dat[all.dat$speaker==speaker,pls.to.keep])
   
   # Combine nasality factor and the PC scores for the binomial logistic regression
@@ -211,7 +217,7 @@ for (speaker in unique(train.dat$speaker)){
   
   # Perform Hosmer-Lemeshow test for goodness of fit (model validation)
   HL.test <- hoslem.test(bin.mod$y, fitted(bin.mod))
-  HL.tests$PLSDA <- rbind(HL.tests$PLSDA, HL.test$statistic)
+  HL.tests$PLSLR <- rbind(HL.tests$PLSLR, HL.test$statistic)
   
   # Get the speaker data from the 20% test data set
   speakerdat  <- all.dat[all.dat$rownum %in% test.dat$rownum[test.dat$speaker==speaker],]
@@ -219,12 +225,12 @@ for (speaker in unique(train.dat$speaker)){
   PC.speaker  <- pca$x[all.dat$rownum[all.dat$speaker==speaker] %in% test.dat$rownum[test.dat$speaker==speaker],]
   
   # Predict nasality probabilities and add them to the test data matrix
-  test.dat$PLSDA.pred[test.dat$speaker==speaker] <- predict(bin.mod, type="response", newdata=as.data.frame(PC.speaker))
+  test.dat$PLSLR.pred[test.dat$speaker==speaker] <- predict(bin.mod, type="response", newdata=as.data.frame(PC.speaker))
 }
 # Convert the predicted response values to categorical labels
-test.dat$PLSDA.pred2[test.dat$PLSDA.pred < 0.5] <- "oral"
-test.dat$PLSDA.pred2[test.dat$PLSDA.pred >= 0.5] <- "nasal"
-test.dat <- test.dat %>% mutate(PLSDA.acc = 1*(nasality == PLSDA.pred2))
+test.dat$PLSLR.pred2[test.dat$PLSLR.pred < 0.5] <- "oral"
+test.dat$PLSLR.pred2[test.dat$PLSLR.pred >= 0.5] <- "nasal"
+test.dat <- test.dat %>% mutate(PLSLR.acc = 1*(nasality == PLSLR.pred2))
 
 
 ## Model validation (goodness of fit)
@@ -237,10 +243,10 @@ dof <- HL.test$parameter
 # First, the model based on the PC-VIR method:
 pchisq(mean(HL.tests$PCVIR), df=dof)
 
-# Second, the model based on the PLS-DA method:
-pchisq(mean(HL.tests$PLSDA), df=dof)
+# Second, the model based on the PLS-LR method:
+pchisq(mean(HL.tests$PLSLR), df=dof)
 
 
 ## Model validation (accuracy of prediction)
 mean(test.dat$PCVIR.pred2 == test.dat$nasality)
-mean(test.dat$PLSDA.pred2 == test.dat$nasality)
+mean(test.dat$PLSLR.pred2 == test.dat$nasality)
